@@ -1,13 +1,13 @@
 import React from 'react'
 import Header from '../components/Header'
 
-const diagnostique = () => {
+const Diagnostique = () => {
   return (
     <div>
       <Header />
-      diagnostique
+      Diagnostique
     </div>
   )
 }
 
-export default diagnostique
+export default Diagnostique
