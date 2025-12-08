@@ -4,13 +4,14 @@ import { fichesPathologiques } from '../../../lib/mocks/fiches-pathologiques'
 import { notFound } from 'next/navigation'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function FichePathologiqueDetail({ params }: PageProps) {
-  const fiche = fichesPathologiques.find(f => f.id === params.id)
+export default async function FichePathologiqueDetail({ params }: PageProps) {
+  const { id } = await params
+  const fiche = fichesPathologiques.find(f => f.id === id)
 
   if (!fiche) {
     notFound()
