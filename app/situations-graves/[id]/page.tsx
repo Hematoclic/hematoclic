@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Header from '../../components/Header'
-import { situationsGraves } from '../../../lib/mocks/situations-graves'
+import { getSituationGraveById } from '@/lib/db'
 import { notFound } from 'next/navigation'
 
 interface PageProps {
@@ -24,7 +24,7 @@ const getUrgenceColor = (niveau: string) => {
 
 export default async function SituationGraveDetail({ params }: PageProps) {
   const { id } = await params
-  const situation = situationsGraves.find(s => s.id === id)
+  const situation = await getSituationGraveById(id)
 
   if (!situation) {
     notFound()

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Header from '../components/Header'
-import { situationsGraves } from '../../lib/mocks/situations-graves'
+import { getSituationsGraves } from '@/lib/db'
 
 const getUrgenceColor = (niveau: string) => {
   switch (niveau) {
@@ -15,7 +15,9 @@ const getUrgenceColor = (niveau: string) => {
   }
 }
 
-export default function SituationsGraves() {
+export default async function SituationsGraves() {
+  const situationsGraves = await getSituationsGraves()
+  
   // Grouper par catégorie
   const situationsParCategorie = situationsGraves.reduce((acc, situation) => {
     if (!acc[situation.categorie]) {

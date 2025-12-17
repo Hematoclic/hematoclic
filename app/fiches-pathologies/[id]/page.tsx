@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Header from '../../components/Header'
-import { fichesPathologiques } from '../../../lib/mocks/fiches-pathologiques'
+import { getFichePathologiqueById } from '@/lib/db'
 import { notFound } from 'next/navigation'
 
 interface PageProps {
@@ -11,7 +11,7 @@ interface PageProps {
 
 export default async function FichePathologiqueDetail({ params }: PageProps) {
   const { id } = await params
-  const fiche = fichesPathologiques.find(f => f.id === id)
+  const fiche = await getFichePathologiqueById(id)
 
   if (!fiche) {
     notFound()

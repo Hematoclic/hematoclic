@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import Header from '../components/Header'
-import { fichesPathologiques } from '../../lib/mocks/fiches-pathologiques'
+import { getFichesPathologiques } from '@/lib/db'
 
-export default function FichesPathologies() {
+export default async function FichesPathologies() {
+  const fichesPathologiques = await getFichesPathologiques()
+  
   // Grouper par catégorie
   const fichesParCategorie = fichesPathologiques.reduce((acc, fiche) => {
     if (!acc[fiche.categorie]) {
