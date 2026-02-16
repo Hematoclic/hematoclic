@@ -72,9 +72,11 @@ export default function AdminDashboard() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Bienvenue dans l'administration d'Hématoclic</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Bienvenue dans l&apos;administration d&apos;Hématoclic</p>
+        </div>
       </div>
 
       {/* Stats */}
