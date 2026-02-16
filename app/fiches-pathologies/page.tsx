@@ -62,24 +62,24 @@ export default async function FichesPathologies() {
                     <div className="relative z-10">
                       <div className="flex items-start justify-between mb-3">
                         <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#a50000] transition-colors duration-300 flex-1">
-                          {fiche.nom}
+                          {fiche.informationsGenerales.nom}
                         </h3>
                         <svg className="w-5 h-5 text-gray-400 group-hover:text-[#a50000] transition-colors duration-300 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
                       <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                        {fiche.description}
+                        {fiche.informationsGenerales.definition}
                       </p>
                       <div className="flex flex-wrap gap-2 mb-4">
                         <span className="px-3 py-1 bg-[#a50000]/10 text-[#a50000] text-xs font-medium rounded-full">
                           Clinique
                         </span>
                         <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                          Biologique
+                          Biologie
                         </span>
                         <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                          Thérapeutique
+                          Traitement
                         </span>
                       </div>
                       {fiche.miseAJour && (

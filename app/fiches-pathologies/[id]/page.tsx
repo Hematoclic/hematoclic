@@ -38,60 +38,68 @@ export default async function FichePathologiqueDetail({ params }: PageProps) {
             {fiche.categorie}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            {fiche.nom}
+            {fiche.informationsGenerales.nom}
           </h1>
-          <p className="text-lg text-gray-600 max-w-3xl">
-            {fiche.description}
-          </p>
         </section>
 
         {/* Contenu de la fiche */}
         <div className="max-w-5xl mx-auto space-y-8">
-          {/* Caractéristiques Cliniques */}
+          
+          {/* 1. Informations Générales */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 bg-[#a50000]/10 rounded-xl flex items-center justify-center mr-4">
                 <svg className="w-6 h-6 text-[#a50000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-                Caractéristiques Cliniques
+                Informations Générales
               </h2>
             </div>
 
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Symptômes</h3>
-                <ul className="list-disc list-inside space-y-2 text-gray-700">
-                  {fiche.caracteristiquesCliniques.symptomes.map((symptome, index) => (
-                    <li key={index}>{symptome}</li>
-                  ))}
-                </ul>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Définition</h3>
+                <p className="text-gray-700 leading-relaxed">{fiche.informationsGenerales.definition}</p>
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Signes</h3>
-                <ul className="list-disc list-inside space-y-2 text-gray-700">
-                  {fiche.caracteristiquesCliniques.signes.map((signe, index) => (
-                    <li key={index}>{signe}</li>
-                  ))}
-                </ul>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Physiopathologie</h3>
+                <p className="text-gray-700 leading-relaxed">{fiche.informationsGenerales.physiopathologie}</p>
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Présentation</h3>
-                <p className="text-gray-700 leading-relaxed">{fiche.caracteristiquesCliniques.presentation}</p>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Évolution</h3>
-                <p className="text-gray-700 leading-relaxed">{fiche.caracteristiquesCliniques.evolution}</p>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Épidémiologie</h3>
+                <p className="text-gray-700 leading-relaxed">{fiche.informationsGenerales.epidemiologie}</p>
               </div>
             </div>
           </section>
 
-          {/* Caractéristiques Biologiques */}
+          {/* 2. Clinique */}
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <div className="flex items-center mb-6">
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                Clinique
+              </h2>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Présentation Clinique</h3>
+              <ul className="list-disc list-inside space-y-2 text-gray-700">
+                {fiche.clinique.presentationClinique.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </section>
+
+          {/* 3. Biologie */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
@@ -100,51 +108,126 @@ export default async function FichePathologiqueDetail({ params }: PageProps) {
                 </svg>
               </div>
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-                Caractéristiques Biologiques
+                Biologie
               </h2>
             </div>
 
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Hémogramme</h3>
-                <p className="text-gray-700 mb-2">{fiche.caracteristiquesBiologiques.hemogramme.description}</p>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Anomalies de l&apos;hémogramme</h3>
                 <ul className="list-disc list-inside space-y-2 text-gray-700">
-                  {fiche.caracteristiquesBiologiques.hemogramme.anomalies.map((anomalie, index) => (
+                  {fiche.biologie.anomaliesHemogramme.map((anomalie, index) => (
                     <li key={index}>{anomalie}</li>
                   ))}
                 </ul>
               </div>
 
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Marqueurs</h3>
-                <ul className="list-disc list-inside space-y-2 text-gray-700">
-                  {fiche.caracteristiquesBiologiques.marqueurs.map((marqueur, index) => (
-                    <li key={index}>{marqueur}</li>
-                  ))}
-                </ul>
-              </div>
+              {fiche.biologie.autresAnomaliesBiologiques.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Autres anomalies biologiques</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700">
+                    {fiche.biologie.autresAnomaliesBiologiques.map((anomalie, index) => (
+                      <li key={index}>{anomalie}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Examens Complémentaires</h3>
-                <ul className="list-disc list-inside space-y-2 text-gray-700">
-                  {fiche.caracteristiquesBiologiques.examensComplementaires.map((examen, index) => (
-                    <li key={index}>{examen}</li>
-                  ))}
-                </ul>
-              </div>
+              {fiche.biologie.myelogramme && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Myélogramme</h3>
+                  <p className="text-gray-700 leading-relaxed">{fiche.biologie.myelogramme}</p>
+                </div>
+              )}
 
+              {fiche.biologie.autresExamens.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Autres examens biologiques</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700">
+                    {fiche.biologie.autresExamens.map((examen, index) => (
+                      <li key={index}>{examen}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* 4. Diagnostic */}
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <div className="flex items-center mb-6">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                Diagnostic
+              </h2>
+            </div>
+
+            <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Critères Diagnostiques</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Critères diagnostiques</h3>
                 <ul className="list-disc list-inside space-y-2 text-gray-700">
-                  {fiche.caracteristiquesBiologiques.criteresDiagnostiques.map((critere, index) => (
+                  {fiche.diagnostic.criteresDiagnostiques.map((critere, index) => (
                     <li key={index}>{critere}</li>
                   ))}
                 </ul>
               </div>
+
+              {fiche.diagnostic.diagnosticsDifferentiels.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Diagnostics différentiels</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700">
+                    {fiche.diagnostic.diagnosticsDifferentiels.map((diag, index) => (
+                      <li key={index}>{diag}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </section>
 
-          {/* Caractéristiques Thérapeutiques */}
+          {/* 5. Conduite à tenir */}
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <div className="flex items-center mb-6">
+              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                Conduite à tenir
+              </h2>
+            </div>
+
+            <div className="space-y-6">
+              {fiche.conduiteATenir.mesuresImmediates.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Mesures immédiates</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700">
+                    {fiche.conduiteATenir.mesuresImmediates.map((mesure, index) => (
+                      <li key={index}>{mesure}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {fiche.conduiteATenir.precautions.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Précautions</h3>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700">
+                    {fiche.conduiteATenir.precautions.map((precaution, index) => (
+                      <li key={index}>{precaution}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* 6. Traitement et suivi */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mr-4">
@@ -153,59 +236,50 @@ export default async function FichePathologiqueDetail({ params }: PageProps) {
                 </svg>
               </div>
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-                Caractéristiques Thérapeutiques
+                Traitement et suivi
               </h2>
             </div>
 
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Traitement de Première Ligne</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Traitement</h3>
                 <ul className="list-disc list-inside space-y-2 text-gray-700">
-                  {fiche.caracteristiquesTherapeutiques.traitementPremiereLigne.map((traitement, index) => (
+                  {fiche.traitementEtSuivi.traitement.map((traitement, index) => (
                     <li key={index}>{traitement}</li>
                   ))}
                 </ul>
               </div>
 
-              {fiche.caracteristiquesTherapeutiques.traitementDeuxiemeLigne && (
+              {fiche.traitementEtSuivi.complications.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Traitement de Deuxième Ligne</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Complications</h3>
                   <ul className="list-disc list-inside space-y-2 text-gray-700">
-                    {fiche.caracteristiquesTherapeutiques.traitementDeuxiemeLigne.map((traitement, index) => (
-                      <li key={index}>{traitement}</li>
+                    {fiche.traitementEtSuivi.complications.map((complication, index) => (
+                      <li key={index}>{complication}</li>
                     ))}
                   </ul>
                 </div>
               )}
 
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Protocoles</h3>
-                <div className="space-y-4">
-                  {fiche.caracteristiquesTherapeutiques.protocoles.map((protocole, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <h4 className="font-semibold text-gray-900 mb-2">{protocole.nom}</h4>
-                      <p className="text-gray-700 mb-2">{protocole.description}</p>
-                      <div>
-                        <span className="text-sm font-medium text-gray-600">Indications: </span>
-                        <span className="text-sm text-gray-700">{protocole.indications.join(', ')}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-3">Suivi</h3>
                 <ul className="list-disc list-inside space-y-2 text-gray-700">
-                  {fiche.caracteristiquesTherapeutiques.suivi.map((item, index) => (
+                  {fiche.traitementEtSuivi.suivi.map((item, index) => (
                     <li key={index}>{item}</li>
                   ))}
                 </ul>
               </div>
 
+              {fiche.traitementEtSuivi.evolution && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Évolution</h3>
+                  <p className="text-gray-700 leading-relaxed">{fiche.traitementEtSuivi.evolution}</p>
+                </div>
+              )}
+
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-3">Pronostic</h3>
-                <p className="text-gray-700 leading-relaxed">{fiche.caracteristiquesTherapeutiques.pronostic}</p>
+                <p className="text-gray-700 leading-relaxed">{fiche.traitementEtSuivi.pronostic}</p>
               </div>
             </div>
           </section>

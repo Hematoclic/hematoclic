@@ -8,26 +8,35 @@ import { SituationGrave } from './types/situation-grave'
 
 interface DbFichePathologique {
   id: string
-  nom: string
   categorie: string
-  description: string
-  caracteristiques_cliniques: {
-    symptomes: string[]
-    signes: string[]
-    presentation: string
-    evolution: string
+  informations_generales: {
+    nom: string
+    definition: string
+    physiopathologie: string
+    epidemiologie: string
   }
-  caracteristiques_biologiques: {
-    hemogramme: { description: string; anomalies: string[] }
-    marqueurs: string[]
-    examensComplementaires: string[]
+  clinique: {
+    presentationClinique: string[]
+  }
+  biologie: {
+    anomaliesHemogramme: string[]
+    autresAnomaliesBiologiques: string[]
+    myelogramme: string
+    autresExamens: string[]
+  }
+  diagnostic: {
     criteresDiagnostiques: string[]
+    diagnosticsDifferentiels: string[]
   }
-  caracteristiques_therapeutiques: {
-    traitementPremiereLigne: string[]
-    traitementDeuxiemeLigne: string[]
-    protocoles: Array<{ nom: string; description: string; indications: string[] }>
+  conduite_a_tenir: {
+    mesuresImmediates: string[]
+    precautions: string[]
+  }
+  traitement_et_suivi: {
+    traitement: string[]
+    complications: string[]
     suivi: string[]
+    evolution: string
     pronostic: string
   }
   bibliographie: string[]
@@ -74,27 +83,36 @@ interface DbSituationGrave {
 function dbToFichePathologique(db: DbFichePathologique): FichePathologique {
   return {
     id: db.id,
-    nom: db.nom,
     categorie: db.categorie,
-    description: db.description,
-    caracteristiquesCliniques: {
-      symptomes: db.caracteristiques_cliniques.symptomes,
-      signes: db.caracteristiques_cliniques.signes,
-      presentation: db.caracteristiques_cliniques.presentation,
-      evolution: db.caracteristiques_cliniques.evolution,
+    informationsGenerales: {
+      nom: db.informations_generales.nom,
+      definition: db.informations_generales.definition,
+      physiopathologie: db.informations_generales.physiopathologie,
+      epidemiologie: db.informations_generales.epidemiologie,
     },
-    caracteristiquesBiologiques: {
-      hemogramme: db.caracteristiques_biologiques.hemogramme,
-      marqueurs: db.caracteristiques_biologiques.marqueurs,
-      examensComplementaires: db.caracteristiques_biologiques.examensComplementaires,
-      criteresDiagnostiques: db.caracteristiques_biologiques.criteresDiagnostiques,
+    clinique: {
+      presentationClinique: db.clinique.presentationClinique,
     },
-    caracteristiquesTherapeutiques: {
-      traitementPremiereLigne: db.caracteristiques_therapeutiques.traitementPremiereLigne,
-      traitementDeuxiemeLigne: db.caracteristiques_therapeutiques.traitementDeuxiemeLigne,
-      protocoles: db.caracteristiques_therapeutiques.protocoles,
-      suivi: db.caracteristiques_therapeutiques.suivi,
-      pronostic: db.caracteristiques_therapeutiques.pronostic,
+    biologie: {
+      anomaliesHemogramme: db.biologie.anomaliesHemogramme,
+      autresAnomaliesBiologiques: db.biologie.autresAnomaliesBiologiques,
+      myelogramme: db.biologie.myelogramme,
+      autresExamens: db.biologie.autresExamens,
+    },
+    diagnostic: {
+      criteresDiagnostiques: db.diagnostic.criteresDiagnostiques,
+      diagnosticsDifferentiels: db.diagnostic.diagnosticsDifferentiels,
+    },
+    conduiteATenir: {
+      mesuresImmediates: db.conduite_a_tenir.mesuresImmediates,
+      precautions: db.conduite_a_tenir.precautions,
+    },
+    traitementEtSuivi: {
+      traitement: db.traitement_et_suivi.traitement,
+      complications: db.traitement_et_suivi.complications,
+      suivi: db.traitement_et_suivi.suivi,
+      evolution: db.traitement_et_suivi.evolution,
+      pronostic: db.traitement_et_suivi.pronostic,
     },
     references: db.bibliographie,
     miseAJour: db.mise_a_jour,
@@ -167,27 +185,36 @@ export async function getFichePathologiqueById(id: string): Promise<FichePatholo
 
 export async function createFichePathologique(fiche: Omit<FichePathologique, 'id'>): Promise<{ success: boolean; id?: string; error?: string }> {
   const dbFiche = {
-    nom: fiche.nom,
     categorie: fiche.categorie,
-    description: fiche.description,
-    caracteristiques_cliniques: {
-      symptomes: fiche.caracteristiquesCliniques.symptomes,
-      signes: fiche.caracteristiquesCliniques.signes,
-      presentation: fiche.caracteristiquesCliniques.presentation,
-      evolution: fiche.caracteristiquesCliniques.evolution,
+    informations_generales: {
+      nom: fiche.informationsGenerales.nom,
+      definition: fiche.informationsGenerales.definition,
+      physiopathologie: fiche.informationsGenerales.physiopathologie,
+      epidemiologie: fiche.informationsGenerales.epidemiologie,
     },
-    caracteristiques_biologiques: {
-      hemogramme: fiche.caracteristiquesBiologiques.hemogramme,
-      marqueurs: fiche.caracteristiquesBiologiques.marqueurs,
-      examensComplementaires: fiche.caracteristiquesBiologiques.examensComplementaires,
-      criteresDiagnostiques: fiche.caracteristiquesBiologiques.criteresDiagnostiques,
+    clinique: {
+      presentationClinique: fiche.clinique.presentationClinique,
     },
-    caracteristiques_therapeutiques: {
-      traitementPremiereLigne: fiche.caracteristiquesTherapeutiques.traitementPremiereLigne,
-      traitementDeuxiemeLigne: fiche.caracteristiquesTherapeutiques.traitementDeuxiemeLigne || [],
-      protocoles: fiche.caracteristiquesTherapeutiques.protocoles,
-      suivi: fiche.caracteristiquesTherapeutiques.suivi,
-      pronostic: fiche.caracteristiquesTherapeutiques.pronostic,
+    biologie: {
+      anomaliesHemogramme: fiche.biologie.anomaliesHemogramme,
+      autresAnomaliesBiologiques: fiche.biologie.autresAnomaliesBiologiques,
+      myelogramme: fiche.biologie.myelogramme,
+      autresExamens: fiche.biologie.autresExamens,
+    },
+    diagnostic: {
+      criteresDiagnostiques: fiche.diagnostic.criteresDiagnostiques,
+      diagnosticsDifferentiels: fiche.diagnostic.diagnosticsDifferentiels,
+    },
+    conduite_a_tenir: {
+      mesuresImmediates: fiche.conduiteATenir.mesuresImmediates,
+      precautions: fiche.conduiteATenir.precautions,
+    },
+    traitement_et_suivi: {
+      traitement: fiche.traitementEtSuivi.traitement,
+      complications: fiche.traitementEtSuivi.complications,
+      suivi: fiche.traitementEtSuivi.suivi,
+      evolution: fiche.traitementEtSuivi.evolution,
+      pronostic: fiche.traitementEtSuivi.pronostic,
     },
     bibliographie: fiche.references || [],
   }
@@ -209,18 +236,13 @@ export async function createFichePathologique(fiche: Omit<FichePathologique, 'id
 export async function updateFichePathologique(id: string, fiche: Partial<FichePathologique>): Promise<{ success: boolean; error?: string }> {
   const updates: Record<string, unknown> = {}
 
-  if (fiche.nom) updates.nom = fiche.nom
   if (fiche.categorie) updates.categorie = fiche.categorie
-  if (fiche.description) updates.description = fiche.description
-  if (fiche.caracteristiquesCliniques) {
-    updates.caracteristiques_cliniques = fiche.caracteristiquesCliniques
-  }
-  if (fiche.caracteristiquesBiologiques) {
-    updates.caracteristiques_biologiques = fiche.caracteristiquesBiologiques
-  }
-  if (fiche.caracteristiquesTherapeutiques) {
-    updates.caracteristiques_therapeutiques = fiche.caracteristiquesTherapeutiques
-  }
+  if (fiche.informationsGenerales) updates.informations_generales = fiche.informationsGenerales
+  if (fiche.clinique) updates.clinique = fiche.clinique
+  if (fiche.biologie) updates.biologie = fiche.biologie
+  if (fiche.diagnostic) updates.diagnostic = fiche.diagnostic
+  if (fiche.conduiteATenir) updates.conduite_a_tenir = fiche.conduiteATenir
+  if (fiche.traitementEtSuivi) updates.traitement_et_suivi = fiche.traitementEtSuivi
   if (fiche.references) updates.bibliographie = fiche.references
 
   const { error } = await supabase

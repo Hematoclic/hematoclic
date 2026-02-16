@@ -1,35 +1,50 @@
 export interface FichePathologique {
   id: string;
-  nom: string;
+  
+  // Informations générales
+  informationsGenerales: {
+    nom: string;
+    definition: string;
+    physiopathologie: string;
+    epidemiologie: string;
+  };
+  
   categorie: string;
-  description: string;
-  caracteristiquesCliniques: {
-    symptomes: string[];
-    signes: string[];
-    presentation: string;
-    evolution: string;
+  
+  // Clinique
+  clinique: {
+    presentationClinique: string[];
   };
-  caracteristiquesBiologiques: {
-    hemogramme: {
-      description: string;
-      anomalies: string[];
-    };
-    marqueurs: string[];
-    examensComplementaires: string[];
+  
+  // Biologie
+  biologie: {
+    anomaliesHemogramme: string[];
+    autresAnomaliesBiologiques: string[];
+    myelogramme: string;
+    autresExamens: string[];
+  };
+  
+  // Diagnostic
+  diagnostic: {
     criteresDiagnostiques: string[];
+    diagnosticsDifferentiels: string[];
   };
-  caracteristiquesTherapeutiques: {
-    traitementPremiereLigne: string[];
-    traitementDeuxiemeLigne?: string[];
-    protocoles: Array<{
-      nom: string;
-      description: string;
-      indications: string[];
-    }>;
+  
+  // Conduite à tenir
+  conduiteATenir: {
+    mesuresImmediates: string[];
+    precautions: string[];
+  };
+  
+  // Traitement et suivi
+  traitementEtSuivi: {
+    traitement: string[];
+    complications: string[];
     suivi: string[];
+    evolution: string;
     pronostic: string;
   };
+  
   references?: string[];
   miseAJour?: string;
 }
-

@@ -10,24 +10,30 @@ export default function NewFichePathologie() {
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
+    // Informations générales
     nom: '',
     categorie: '',
-    description: '',
-    // Caractéristiques cliniques
-    symptomes: '',
-    signes: '',
-    presentation: '',
-    evolution: '',
-    // Caractéristiques biologiques
-    hemogrammeDescription: '',
-    hemogrammeAnomalies: '',
-    marqueurs: '',
-    examensComplementaires: '',
+    definition: '',
+    physiopathologie: '',
+    epidemiologie: '',
+    // Clinique
+    presentationClinique: '',
+    // Biologie
+    anomaliesHemogramme: '',
+    autresAnomaliesBiologiques: '',
+    myelogramme: '',
+    autresExamens: '',
+    // Diagnostic
     criteresDiagnostiques: '',
-    // Caractéristiques thérapeutiques
-    traitementPremiereLigne: '',
-    traitementDeuxiemeLigne: '',
+    diagnosticsDifferentiels: '',
+    // Conduite à tenir
+    mesuresImmediates: '',
+    precautions: '',
+    // Traitement et suivi
+    traitement: '',
+    complications: '',
     suivi: '',
+    evolution: '',
     pronostic: '',
     // Références
     references: '',
@@ -54,29 +60,35 @@ export default function NewFichePathologie() {
     setError(null)
 
     const ficheData = {
-      nom: formData.nom,
       categorie: formData.categorie,
-      description: formData.description,
-      caracteristiquesCliniques: {
-        symptomes: formData.symptomes.split('\n').filter(s => s.trim()),
-        signes: formData.signes.split('\n').filter(s => s.trim()),
-        presentation: formData.presentation,
-        evolution: formData.evolution,
+      informationsGenerales: {
+        nom: formData.nom,
+        definition: formData.definition,
+        physiopathologie: formData.physiopathologie,
+        epidemiologie: formData.epidemiologie,
       },
-      caracteristiquesBiologiques: {
-        hemogramme: {
-          description: formData.hemogrammeDescription,
-          anomalies: formData.hemogrammeAnomalies.split('\n').filter(s => s.trim()),
-        },
-        marqueurs: formData.marqueurs.split('\n').filter(s => s.trim()),
-        examensComplementaires: formData.examensComplementaires.split('\n').filter(s => s.trim()),
+      clinique: {
+        presentationClinique: formData.presentationClinique.split('\n').filter(s => s.trim()),
+      },
+      biologie: {
+        anomaliesHemogramme: formData.anomaliesHemogramme.split('\n').filter(s => s.trim()),
+        autresAnomaliesBiologiques: formData.autresAnomaliesBiologiques.split('\n').filter(s => s.trim()),
+        myelogramme: formData.myelogramme,
+        autresExamens: formData.autresExamens.split('\n').filter(s => s.trim()),
+      },
+      diagnostic: {
         criteresDiagnostiques: formData.criteresDiagnostiques.split('\n').filter(s => s.trim()),
+        diagnosticsDifferentiels: formData.diagnosticsDifferentiels.split('\n').filter(s => s.trim()),
       },
-      caracteristiquesTherapeutiques: {
-        traitementPremiereLigne: formData.traitementPremiereLigne.split('\n').filter(s => s.trim()),
-        traitementDeuxiemeLigne: formData.traitementDeuxiemeLigne.split('\n').filter(s => s.trim()),
-        protocoles: [],
+      conduiteATenir: {
+        mesuresImmediates: formData.mesuresImmediates.split('\n').filter(s => s.trim()),
+        precautions: formData.precautions.split('\n').filter(s => s.trim()),
+      },
+      traitementEtSuivi: {
+        traitement: formData.traitement.split('\n').filter(s => s.trim()),
+        complications: formData.complications.split('\n').filter(s => s.trim()),
         suivi: formData.suivi.split('\n').filter(s => s.trim()),
+        evolution: formData.evolution,
         pronostic: formData.pronostic,
       },
       references: formData.references.split('\n').filter(s => s.trim()),
@@ -157,104 +169,78 @@ export default function NewFichePathologie() {
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description <span className="text-red-500">*</span>
+                Définition <span className="text-red-500">*</span>
               </label>
               <textarea
-                name="description"
-                value={formData.description}
+                name="definition"
+                value={formData.definition}
                 onChange={handleChange}
                 required
                 rows={3}
-                placeholder="Description générale de la pathologie..."
+                placeholder="Définition de la pathologie..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Physiopathologie
+              </label>
+              <textarea
+                name="physiopathologie"
+                value={formData.physiopathologie}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Mécanismes physiopathologiques..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Épidémiologie
+              </label>
+              <textarea
+                name="epidemiologie"
+                value={formData.epidemiologie}
+                onChange={handleChange}
+                rows={2}
+                placeholder="Données épidémiologiques..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
               />
             </div>
           </div>
         </div>
 
-        {/* Caractéristiques cliniques */}
+        {/* Clinique */}
         <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Caractéristiques cliniques</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Clinique</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Symptômes (un par ligne)
+                Présentation clinique (une par ligne)
               </label>
               <textarea
-                name="symptomes"
-                value={formData.symptomes}
+                name="presentationClinique"
+                value={formData.presentationClinique}
                 onChange={handleChange}
                 rows={4}
-                placeholder="Fatigue intense&#10;Fièvre&#10;Saignements..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Signes cliniques (un par ligne)
-              </label>
-              <textarea
-                name="signes"
-                value={formData.signes}
-                onChange={handleChange}
-                rows={4}
-                placeholder="Anémie&#10;Thrombopénie&#10;Neutropénie..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Présentation
-              </label>
-              <textarea
-                name="presentation"
-                value={formData.presentation}
-                onChange={handleChange}
-                rows={2}
-                placeholder="Mode de présentation de la pathologie..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Évolution
-              </label>
-              <textarea
-                name="evolution"
-                value={formData.evolution}
-                onChange={handleChange}
-                rows={2}
-                placeholder="Évolution naturelle de la maladie..."
+                placeholder="Fatigue intense&#10;Fièvre&#10;Saignements&#10;Syndrome tumoral..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
               />
             </div>
           </div>
         </div>
 
-        {/* Caractéristiques biologiques */}
+        {/* Biologie */}
         <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Caractéristiques biologiques</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Biologie</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Hémogramme - Description
+                Anomalies de l&apos;hémogramme (une par ligne)
               </label>
               <textarea
-                name="hemogrammeDescription"
-                value={formData.hemogrammeDescription}
-                onChange={handleChange}
-                rows={2}
-                placeholder="Description des anomalies de l'hémogramme..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Hémogramme - Anomalies (une par ligne)
-              </label>
-              <textarea
-                name="hemogrammeAnomalies"
-                value={formData.hemogrammeAnomalies}
+                name="anomaliesHemogramme"
+                value={formData.anomaliesHemogramme}
                 onChange={handleChange}
                 rows={3}
                 placeholder="Anémie normochrome normocytaire&#10;Thrombopénie&#10;Neutropénie..."
@@ -263,30 +249,50 @@ export default function NewFichePathologie() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Marqueurs biologiques (un par ligne)
+                Autres anomalies biologiques (une par ligne)
               </label>
               <textarea
-                name="marqueurs"
-                value={formData.marqueurs}
+                name="autresAnomaliesBiologiques"
+                value={formData.autresAnomaliesBiologiques}
                 onChange={handleChange}
                 rows={3}
-                placeholder="Blastes médullaires ≥ 20%&#10;Cytogénétique: t(8;21)..."
+                placeholder="LDH augmentée&#10;Hyperuricémie..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Examens complémentaires (un par ligne)
+                Myélogramme
               </label>
               <textarea
-                name="examensComplementaires"
-                value={formData.examensComplementaires}
+                name="myelogramme"
+                value={formData.myelogramme}
                 onChange={handleChange}
-                rows={3}
-                placeholder="Myélogramme&#10;Caryotype médullaire&#10;Biologie moléculaire..."
+                rows={2}
+                placeholder="Description du myélogramme..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Autres examens biologiques (un par ligne)
+              </label>
+              <textarea
+                name="autresExamens"
+                value={formData.autresExamens}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Caryotype médullaire&#10;Biologie moléculaire&#10;Immunophénotypage..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Diagnostic */}
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Diagnostic</h2>
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Critères diagnostiques (un par ligne)
@@ -300,36 +306,82 @@ export default function NewFichePathologie() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Diagnostics différentiels (un par ligne)
+              </label>
+              <textarea
+                name="diagnosticsDifferentiels"
+                value={formData.diagnosticsDifferentiels}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Diagnostic différentiel 1&#10;Diagnostic différentiel 2..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Caractéristiques thérapeutiques */}
+        {/* Conduite à tenir */}
         <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Caractéristiques thérapeutiques</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Conduite à tenir</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Traitement de première ligne (un par ligne)
+                Mesures immédiates (une par ligne)
               </label>
               <textarea
-                name="traitementPremiereLigne"
-                value={formData.traitementPremiereLigne}
+                name="mesuresImmediates"
+                value={formData.mesuresImmediates}
                 onChange={handleChange}
                 rows={3}
-                placeholder="Chimiothérapie d'induction&#10;Consolidation..."
+                placeholder="Hospitalisation&#10;Bilan complet..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Traitement de deuxième ligne (un par ligne)
+                Précautions (une par ligne)
               </label>
               <textarea
-                name="traitementDeuxiemeLigne"
-                value={formData.traitementDeuxiemeLigne}
+                name="precautions"
+                value={formData.precautions}
                 onChange={handleChange}
                 rows={3}
-                placeholder="Chimiothérapie de rattrapage&#10;Thérapies ciblées..."
+                placeholder="Éviter les AINS&#10;Surveillance rapprochée..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Traitement et suivi */}
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Traitement et suivi</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Traitement (un par ligne)
+              </label>
+              <textarea
+                name="traitement"
+                value={formData.traitement}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Chimiothérapie d'induction&#10;Consolidation&#10;Allogreffe..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Complications (une par ligne)
+              </label>
+              <textarea
+                name="complications"
+                value={formData.complications}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Neutropénie fébrile&#10;Syndrome de lyse tumorale..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
               />
             </div>
@@ -348,6 +400,19 @@ export default function NewFichePathologie() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Évolution
+              </label>
+              <textarea
+                name="evolution"
+                value={formData.evolution}
+                onChange={handleChange}
+                rows={2}
+                placeholder="Évolution naturelle et sous traitement..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Pronostic
               </label>
               <textarea
@@ -361,7 +426,6 @@ export default function NewFichePathologie() {
             </div>
           </div>
         </div>
-
         {/* Références */}
         <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Références</h2>

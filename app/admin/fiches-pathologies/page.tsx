@@ -28,8 +28,8 @@ export default function AdminFichesPathologies() {
 
   // Filter fiches
   const filteredFiches = fiches.filter(fiche => {
-    const matchesSearch = fiche.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      fiche.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = fiche.informationsGenerales.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      fiche.informationsGenerales.definition.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategorie = !selectedCategorie || fiche.categorie === selectedCategorie
     return matchesSearch && matchesCategorie
   })
@@ -155,8 +155,8 @@ export default function AdminFichesPathologies() {
                   <tr key={fiche.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium text-gray-900">{fiche.nom}</p>
-                        <p className="text-sm text-gray-500 line-clamp-1">{fiche.description}</p>
+                        <p className="font-medium text-gray-900">{fiche.informationsGenerales.nom}</p>
+                        <p className="text-sm text-gray-500 line-clamp-1">{fiche.informationsGenerales.definition}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -191,7 +191,7 @@ export default function AdminFichesPathologies() {
                           </svg>
                         </Link>
                         <button
-                          onClick={() => handleDelete(fiche.id, fiche.nom)}
+                          onClick={() => handleDelete(fiche.id, fiche.informationsGenerales.nom)}
                           disabled={deleting === fiche.id}
                           className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                           title="Supprimer"
