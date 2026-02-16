@@ -158,7 +158,7 @@ export async function getFichesPathologiques(): Promise<FichePathologique[]> {
   const { data, error } = await supabase
     .from('fiches_pathologiques')
     .select('*')
-    .order('nom')
+    .order('created_at', { ascending: false })
 
   if (error) {
     console.error('Erreur lors de la récupération des fiches:', error)
