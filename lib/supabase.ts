@@ -1,20 +1,33 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://iyllteozniqgxoedkqha.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-if (!supabaseAnonKey) {
-  console.warn('⚠️ NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. Please add it to your .env.local file.')
-  console.warn('   Get your anon key from: https://supabase.com/dashboard/project/iyllteozniqgxoedkqha/settings/api')
+// Create a single supabase client for interacting with your database
+// Use a placeholder key during build time to prevent errors
+const createSupabaseClient = (): SupabaseClient => {
+  if (!supabaseAnonKey) {
+    console.warn('⚠️ NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. Please add it to your .env.local file.')
+    console.warn('   Get your anon key from: https://supabase.com/dashboard/project/iyllteozniqgxoedkqha/settings/api')
+    // Use a placeholder key during build time to allow static generation
+    // The client won't work but it won't crash the build either
+    return createClient(supabaseUrl, 'placeholder-key-for-build', {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    })
+  }
+  
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  })
 }
 
-// Create a single supabase client for interacting with your database
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-})
+export const supabase = createSupabaseClient()
 
 /**
  * Test the Supabase connection
