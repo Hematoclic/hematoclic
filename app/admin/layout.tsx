@@ -1,11 +1,26 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, loading, signOut } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Rediriger vers login si non authentifié
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login')
+    }
+  }, [user, loading, router])
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/login')
+  }
 
   const navigation = [
     {
@@ -42,6 +57,26 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       return pathname === '/admin'
     }
     return pathname.startsWith(href)
+  }
+
+  // Afficher un loader pendant la vérification d'auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <svg className="animate-spin w-12 h-12 text-[#a50000] mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Ne pas afficher le contenu si non authentifié
+  if (!user) {
+    return null
   }
 
   return (
@@ -90,6 +125,23 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+          {/* User info */}
+          <div className="mb-3 px-3 py-2 text-xs text-white/60 truncate">
+            {user.email}
+          </div>
+          
+          {/* Déconnexion */}
+          <button 
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors text-white/80 mb-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span>Déconnexion</span>
+          </button>
+          
+          {/* Retour au site */}
           <Link 
             href="/" 
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors text-white/80"
