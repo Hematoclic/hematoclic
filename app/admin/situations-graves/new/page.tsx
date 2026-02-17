@@ -1,11 +1,12 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createSituationGrave } from '@/lib/db'
 
 export default function NewSituationGrave() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -31,6 +32,14 @@ export default function NewSituationGrave() {
     pronostic: '',
     references: '',
   })
+
+  // Pré-remplir la catégorie depuis l'URL
+  useEffect(() => {
+    const categorieFromUrl = searchParams.get('categorie')
+    if (categorieFromUrl) {
+      setFormData(prev => ({ ...prev, categorie: categorieFromUrl }))
+    }
+  }, [searchParams])
 
   const categories = [
     'Urgences métaboliques',

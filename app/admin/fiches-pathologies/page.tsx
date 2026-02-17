@@ -1,17 +1,19 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { FichePathologique } from '@/lib/types/fiche-pathologique'
 import { getFichesPathologiques, deleteFichePathologique } from '@/lib/db'
+import AdminFileTree from '@/app/components/AdminFileTree'
 
 export default function AdminFichesPathologies() {
+  const router = useRouter()
   const [fiches, setFiches] = useState<FichePathologique[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategorie, setSelectedCategorie] = useState('')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [showNewFolderModal, setShowNewFolderModal] = useState(false)
+  const [newFolderPath, setNewFolderPath] = useState<string[]>([])
+  const [newFolderName, setNewFolderName] = useState('')
 
-  // Charger les fiches depuis la DB
   useEffect(() => {
     loadFiches()
   }, [])
@@ -23,16 +25,24 @@ export default function AdminFichesPathologies() {
     setLoading(false)
   }
 
-  // Get unique categories
-  const categories = [...new Set(fiches.map(f => f.categorie))]
-
-  // Filter fiches
-  const filteredFiches = fiches.filter(fiche => {
-    const matchesSearch = fiche.informationsGenerales.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      fiche.informationsGenerales.definition.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategorie = !selectedCategorie || fiche.categorie === selectedCategorie
-    return matchesSearch && matchesCategorie
-  })
+  // Transformer les fiches en structure de dossiers
+  const buildFolderStructure = () => {
+    const categories = [...new Set(fiches.map(f => f.categorie))]
+    
+    return categories.map(categorie => ({
+      name: categorie,
+      files: fiches
+        .filter(f => f.categorie === categorie)
+        .map(fiche => ({
+          id: fiche.id,
+          name: fiche.informationsGenerales.nom,
+          description: fiche.informationsGenerales.definition,
+          href: `/fiches-pathologies/${fiche.id}`,
+          editHref: `/admin/fiches-pathologies/${fiche.id}/edit`,
+          onDelete: () => handleDelete(fiche.id, fiche.informationsGenerales.nom)
+        }))
+    }))
+  }
 
   const handleDelete = async (id: string, nom: string) => {
     if (!confirm(`Êtes-vous sûr de vouloir supprimer "${nom}" ?`)) {
@@ -48,6 +58,30 @@ export default function AdminFichesPathologies() {
       alert(`Erreur: ${result.error}`)
     }
     setDeleting(null)
+  }
+
+  const handleCreateFolder = (path: string[]) => {
+    setNewFolderPath(path)
+    setNewFolderName('')
+    setShowNewFolderModal(true)
+  }
+
+  const handleCreateFile = (path: string[]) => {
+    // Le premier élément du path est la catégorie
+    const categorie = path[0] || ''
+    router.push(`/admin/fiches-pathologies/new?categorie=${encodeURIComponent(categorie)}`)
+  }
+
+  const handleSubmitNewFolder = () => {
+    if (!newFolderName.trim()) {
+      alert('Veuillez entrer un nom de dossier')
+      return
+    }
+    // Pour l'instant, on crée juste une fiche placeholder pour créer la catégorie
+    // Dans une vraie app, on aurait une table categories
+    alert(`Note: Pour créer le dossier "${newFolderName}", créez une fiche dans cette catégorie.`)
+    setShowNewFolderModal(false)
+    router.push(`/admin/fiches-pathologies/new?categorie=${encodeURIComponent(newFolderName)}`)
   }
 
   if (loading) {
@@ -72,157 +106,64 @@ export default function AdminFichesPathologies() {
           <h1 className="text-3xl font-bold text-gray-900">Fiches Pathologies</h1>
           <p className="text-gray-600 mt-1">Gérez les fiches pathologiques</p>
         </div>
-        <Link
-          href="/admin/fiches-pathologies/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#a50000] text-white rounded-lg hover:bg-[#8a0000] transition-colors w-fit"
+        <button
+          onClick={loadFiches}
+          className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-fit"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>Nouvelle fiche</span>
-        </Link>
+          <span>Actualiser</span>
+        </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl shadow-md p-4 mb-6 border border-gray-100">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+      {/* File Tree */}
+      <AdminFileTree
+        folders={buildFolderStructure()}
+        accentColor="#a50000"
+        onCreateFolder={handleCreateFolder}
+        onCreateFile={handleCreateFile}
+        createFileLabel="Nouvelle fiche"
+        createFolderLabel="Nouvelle catégorie"
+        isDeleting={deleting}
+      />
+
+      {/* Modal nouveau dossier */}
+      {showNewFolderModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Nouvelle catégorie</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              {newFolderPath.length > 0 
+                ? `Créer dans: ${newFolderPath.join(' / ')}`
+                : 'Créer à la racine'
+              }
+            </p>
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher une fiche..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Nom de la catégorie..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors mb-4"
+              autoFocus
             />
-          </div>
-          <div className="md:w-64">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-            <select
-              value={selectedCategorie}
-              onChange={(e) => setSelectedCategorie(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors"
-            >
-              <option value="">Toutes les catégories</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
-          <div className="md:w-auto flex items-end">
-            <button
-              onClick={loadFiches}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Actualiser
-            </button>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowNewFolderModal(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSubmitNewFolder}
+                className="px-4 py-2 bg-[#a50000] text-white rounded-lg hover:bg-[#8a0000] transition-colors"
+              >
+                Créer
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nom
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Catégorie
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                  Mise à jour
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredFiches.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                    {fiches.length === 0 ? 'Aucune fiche dans la base de données' : 'Aucune fiche trouvée'}
-                  </td>
-                </tr>
-              ) : (
-                filteredFiches.map((fiche) => (
-                  <tr key={fiche.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-medium text-gray-900">{fiche.informationsGenerales.nom}</p>
-                        <p className="text-sm text-gray-500 line-clamp-1">{fiche.informationsGenerales.definition}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {fiche.categorie}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
-                      <span className="text-sm text-gray-500">
-                        {fiche.miseAJour || 'Non définie'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          href={`/fiches-pathologies/${fiche.id}`}
-                          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Voir"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </Link>
-                        <Link
-                          href={`/admin/fiches-pathologies/${fiche.id}/edit`}
-                          className="p-2 text-gray-500 hover:text-[#a50000] hover:bg-red-50 rounded-lg transition-colors"
-                          title="Modifier"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(fiche.id, fiche.informationsGenerales.nom)}
-                          disabled={deleting === fiche.id}
-                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                          title="Supprimer"
-                        >
-                          {deleting === fiche.id ? (
-                            <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination placeholder */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <p className="text-sm text-gray-500">
-            {filteredFiches.length} fiche(s) trouvée(s)
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

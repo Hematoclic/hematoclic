@@ -1,18 +1,21 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createFichePathologique } from '@/lib/db'
 
 export default function NewFichePathologie() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const categorieFromUrl = searchParams.get('categorie') || ''
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     // Informations générales
     nom: '',
-    categorie: '',
+    categorie: categorieFromUrl,
     definition: '',
     physiopathologie: '',
     epidemiologie: '',
@@ -38,6 +41,13 @@ export default function NewFichePathologie() {
     // Références
     references: '',
   })
+
+  // Mettre à jour la catégorie si elle vient de l'URL
+  useEffect(() => {
+    if (categorieFromUrl) {
+      setFormData(prev => ({ ...prev, categorie: categorieFromUrl }))
+    }
+  }, [categorieFromUrl])
 
   const categories = [
     'Hémopathies malignes',
