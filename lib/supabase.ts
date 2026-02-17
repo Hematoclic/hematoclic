@@ -2,6 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://iyllteozniqgxoedkqha.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
 // Create a single supabase client for interacting with your database
 // Use a placeholder key during build time to prevent errors
@@ -27,7 +28,21 @@ const createSupabaseClient = (): SupabaseClient => {
   })
 }
 
+// Client admin avec service role key (bypass RLS) - UNIQUEMENT côté serveur
+const createSupabaseAdmin = (): SupabaseClient | null => {
+  if (!supabaseServiceKey) {
+    return null
+  }
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  })
+}
+
 export const supabase = createSupabaseClient()
+export const supabaseAdmin = createSupabaseAdmin()
 
 /**
  * Test the Supabase connection

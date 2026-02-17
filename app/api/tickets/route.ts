@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createTicket } from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,16 +23,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await createTicket(email, sujet, message)
-
-    if (!result.success) {
+    // Vérifier que le client admin est disponible
+    if (!supabaseAdmin) {
+      console.error('SUPABASE_SERVICE_ROLE_KEY non configurée')
       return NextResponse.json(
-        { error: result.error || 'Erreur lors de la création du ticket' },
+        { error: 'Configuration serveur manquante' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ success: true, ticket: result.ticket })
+    // Utiliser le client admin pour bypass RLS
+    const { data, error } = await supabaseAdmin
+      .from('tickets')
+      .insert({ email, sujet, message })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Erreur création ticket:', error)
+      return NextResponse.json(
+        { error: error.message || 'Erreur lors de la création du ticket' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ success: true, ticket: data })
   } catch (error) {
     console.error('Erreur API ticket:', error)
     return NextResponse.json(

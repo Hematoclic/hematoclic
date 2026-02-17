@@ -30,22 +30,26 @@ CREATE TRIGGER tickets_updated_at
 -- RLS Policies
 ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
 
--- Permettre l'insertion à tous (pour les visiteurs)
+-- Permettre l'insertion à tous (visiteurs anonymes inclus)
 CREATE POLICY "Création tickets pour tous" ON tickets
   FOR INSERT
+  TO anon, authenticated
   WITH CHECK (true);
 
 -- Permettre la lecture aux utilisateurs authentifiés uniquement
 CREATE POLICY "Lecture tickets admin" ON tickets
   FOR SELECT
-  USING (auth.role() = 'authenticated');
+  TO authenticated
+  USING (true);
 
 -- Permettre la mise à jour aux utilisateurs authentifiés
 CREATE POLICY "Modification tickets admin" ON tickets
   FOR UPDATE
-  USING (auth.role() = 'authenticated');
+  TO authenticated
+  USING (true);
 
 -- Permettre la suppression aux utilisateurs authentifiés
 CREATE POLICY "Suppression tickets admin" ON tickets
   FOR DELETE
-  USING (auth.role() = 'authenticated');
+  TO authenticated
+  USING (true);
