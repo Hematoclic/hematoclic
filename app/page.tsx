@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 export default function Home() {
   const sections = [
@@ -99,6 +100,7 @@ export default function Home() {
           </p>
         </section>
       </div>
+      <Footer />
     </main>
   );
 }

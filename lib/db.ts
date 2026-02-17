@@ -487,3 +487,100 @@ export async function renameCategory(id: string, newName: string): Promise<{ suc
 
   return { success: true }
 }
+
+// =============================================
+// TICKETS
+// =============================================
+
+export interface Ticket {
+  id: string
+  email: string
+  sujet: string
+  message: string
+  statut: 'nouveau' | 'lu' | 'resolu'
+  createdAt: string
+  updatedAt: string
+}
+
+interface DbTicket {
+  id: string
+  email: string
+  sujet: string
+  message: string
+  statut: 'nouveau' | 'lu' | 'resolu'
+  created_at: string
+  updated_at: string
+}
+
+function dbToTicket(db: DbTicket): Ticket {
+  return {
+    id: db.id,
+    email: db.email,
+    sujet: db.sujet,
+    message: db.message,
+    statut: db.statut,
+    createdAt: db.created_at,
+    updatedAt: db.updated_at,
+  }
+}
+
+export async function getTickets(): Promise<Ticket[]> {
+  const { data, error } = await supabase
+    .from('tickets')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Erreur lors de la récupération des tickets:', error)
+    return []
+  }
+
+  return (data || []).map(dbToTicket)
+}
+
+export async function createTicket(
+  email: string,
+  sujet: string,
+  message: string
+): Promise<{ success: boolean; ticket?: Ticket; error?: string }> {
+  const { data, error } = await supabase
+    .from('tickets')
+    .insert({ email, sujet, message })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Erreur lors de la création du ticket:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, ticket: dbToTicket(data) }
+}
+
+export async function deleteTicket(id: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('tickets')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Erreur lors de la suppression du ticket:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function updateTicketStatut(id: string, statut: 'nouveau' | 'lu' | 'resolu'): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('tickets')
+    .update({ statut })
+    .eq('id', id)
+
+  if (error) {
+    console.error('Erreur lors de la mise à jour du statut:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
