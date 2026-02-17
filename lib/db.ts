@@ -388,3 +388,102 @@ export async function deleteSituationGrave(id: string): Promise<{ success: boole
 
   return { success: true }
 }
+
+// =============================================
+// CATEGORIES / DOSSIERS
+// =============================================
+
+export interface Category {
+  id: string
+  nom: string
+  type: 'fiches' | 'situations'
+  parentId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+interface DbCategory {
+  id: string
+  nom: string
+  type: 'fiches' | 'situations'
+  parent_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+function dbToCategory(db: DbCategory): Category {
+  return {
+    id: db.id,
+    nom: db.nom,
+    type: db.type,
+    parentId: db.parent_id,
+    createdAt: db.created_at,
+    updatedAt: db.updated_at,
+  }
+}
+
+export async function getCategories(type: 'fiches' | 'situations'): Promise<Category[]> {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('type', type)
+    .order('nom')
+
+  if (error) {
+    console.error('Erreur lors de la récupération des catégories:', error)
+    return []
+  }
+
+  return (data || []).map(dbToCategory)
+}
+
+export async function createCategory(
+  nom: string,
+  type: 'fiches' | 'situations',
+  parentId: string | null = null
+): Promise<{ success: boolean; category?: Category; error?: string }> {
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({
+      nom,
+      type,
+      parent_id: parentId,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Erreur lors de la création de la catégorie:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, category: dbToCategory(data) }
+}
+
+export async function deleteCategory(id: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('categories')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Erreur lors de la suppression de la catégorie:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function renameCategory(id: string, newName: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('categories')
+    .update({ nom: newName })
+    .eq('id', id)
+
+  if (error) {
+    console.error('Erreur lors du renommage de la catégorie:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}

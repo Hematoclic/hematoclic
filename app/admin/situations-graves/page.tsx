@@ -2,26 +2,32 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { SituationGrave } from '@/lib/types/situation-grave'
-import { getSituationsGraves, deleteSituationGrave } from '@/lib/db'
+import { getSituationsGraves, deleteSituationGrave, getCategories, createCategory, deleteCategory, Category } from '@/lib/db'
 import AdminFileTree from '@/app/components/AdminFileTree'
 
 export default function AdminSituationsGraves() {
   const router = useRouter()
   const [situations, setSituations] = useState<SituationGrave[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [showNewFolderModal, setShowNewFolderModal] = useState(false)
   const [newFolderPath, setNewFolderPath] = useState<string[]>([])
   const [newFolderName, setNewFolderName] = useState('')
+  const [creatingFolder, setCreatingFolder] = useState(false)
 
   useEffect(() => {
-    loadSituations()
+    loadData()
   }, [])
 
-  const loadSituations = async () => {
+  const loadData = async () => {
     setLoading(true)
-    const data = await getSituationsGraves()
-    setSituations(data)
+    const [situationsData, categoriesData] = await Promise.all([
+      getSituationsGraves(),
+      getCategories('situations')
+    ])
+    setSituations(situationsData)
+    setCategories(categoriesData)
     setLoading(false)
   }
 
@@ -40,25 +46,33 @@ export default function AdminSituationsGraves() {
 
   // Transformer les situations en structure de dossiers
   const buildFolderStructure = () => {
-    const categories = [...new Set(situations.map(s => s.categorie))]
+    // Récupérer toutes les catégories uniques (depuis les situations ET la table categories)
+    const situationsCategories = [...new Set(situations.map(s => s.categorie))]
+    const dbCategories = categories.map(c => c.nom)
+    const allCategories = [...new Set([...situationsCategories, ...dbCategories])]
     
-    return categories.map(categorie => ({
-      name: categorie,
-      files: situations
-        .filter(s => s.categorie === categorie)
-        .map(situation => ({
-          id: situation.id,
-          name: situation.nom,
-          description: situation.description,
-          badge: {
-            text: situation.niveauUrgence.toUpperCase(),
-            color: getUrgenceBadgeColor(situation.niveauUrgence),
-          },
-          href: `/situations-graves/${situation.id}`,
-          editHref: `/admin/situations-graves/${situation.id}/edit`,
-          onDelete: () => handleDelete(situation.id, situation.nom)
-        }))
-    }))
+    return allCategories.map(categorie => {
+      const categoryFromDb = categories.find(c => c.nom === categorie)
+      return {
+        id: categoryFromDb?.id,
+        name: categorie,
+        files: situations
+          .filter(s => s.categorie === categorie)
+          .map(situation => ({
+            id: situation.id,
+            name: situation.nom,
+            description: situation.description,
+            badge: {
+              text: situation.niveauUrgence.toUpperCase(),
+              color: getUrgenceBadgeColor(situation.niveauUrgence),
+            },
+            href: `/situations-graves/${situation.id}`,
+            editHref: `/admin/situations-graves/${situation.id}/edit`,
+            onDelete: () => handleDelete(situation.id, situation.nom)
+          })),
+        onDeleteFolder: categoryFromDb ? () => handleDeleteFolder(categoryFromDb.id, categorie) : undefined
+      }
+    })
   }
 
   const handleDelete = async (id: string, nom: string) => {
@@ -77,6 +91,25 @@ export default function AdminSituationsGraves() {
     setDeleting(null)
   }
 
+  const handleDeleteFolder = async (id: string, nom: string) => {
+    const situationsInCategory = situations.filter(s => s.categorie === nom)
+    if (situationsInCategory.length > 0) {
+      alert(`Impossible de supprimer le dossier "${nom}" car il contient ${situationsInCategory.length} situation(s). Supprimez d'abord les situations.`)
+      return
+    }
+    
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le dossier "${nom}" ?`)) {
+      return
+    }
+
+    const result = await deleteCategory(id)
+    if (result.success) {
+      setCategories(categories.filter(c => c.id !== id))
+    } else {
+      alert(`Erreur: ${result.error}`)
+    }
+  }
+
   const handleCreateFolder = (path: string[]) => {
     setNewFolderPath(path)
     setNewFolderName('')
@@ -88,14 +121,22 @@ export default function AdminSituationsGraves() {
     router.push(`/admin/situations-graves/new?categorie=${encodeURIComponent(categorie)}`)
   }
 
-  const handleSubmitNewFolder = () => {
+  const handleSubmitNewFolder = async () => {
     if (!newFolderName.trim()) {
       alert('Veuillez entrer un nom de dossier')
       return
     }
-    alert(`Note: Pour créer le dossier "${newFolderName}", créez une situation dans cette catégorie.`)
-    setShowNewFolderModal(false)
-    router.push(`/admin/situations-graves/new?categorie=${encodeURIComponent(newFolderName)}`)
+
+    setCreatingFolder(true)
+    const result = await createCategory(newFolderName.trim(), 'situations')
+    
+    if (result.success && result.category) {
+      setCategories([...categories, result.category])
+      setShowNewFolderModal(false)
+    } else {
+      alert(`Erreur: ${result.error}`)
+    }
+    setCreatingFolder(false)
   }
 
   // Icône d'alerte pour les situations graves
@@ -136,7 +177,7 @@ export default function AdminSituationsGraves() {
           <p className="text-gray-600 mt-1">Gérez les situations d&apos;urgence</p>
         </div>
         <button
-          onClick={loadSituations}
+          onClick={loadData}
           className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-fit"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,18 +217,27 @@ export default function AdminSituationsGraves() {
               placeholder="Nom de la catégorie..."
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-colors mb-4"
               autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmitNewFolder()}
             />
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowNewFolderModal(false)}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                disabled={creatingFolder}
               >
                 Annuler
               </button>
               <button
                 onClick={handleSubmitNewFolder}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                disabled={creatingFolder}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
               >
+                {creatingFolder && (
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                )}
                 Créer
               </button>
             </div>
