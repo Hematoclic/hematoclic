@@ -47,17 +47,18 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <div className="container mx-auto px-4 py-12 md:py-16 lg:py-20">
-        <section className="text-center mb-16 md:mb-20">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-            Bienvenue sur <span className="text-[#a50000]">Hématoclic</span>
-          </h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-            Votre ressource complète pour l'hématologie clinique. Accédez rapidement aux informations essentielles pour votre pratique médicale.
-          </p>
-        </section>
+      <main className="flex-1 bg-gradient-to-b from-gray-50 to-white">
+        <div className="container mx-auto px-4 py-12 md:py-16 lg:py-20">
+          <section className="text-center mb-16 md:mb-20">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
+              Bienvenue sur <span className="text-[#a50000]">Hématoclic</span>
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+              Votre ressource complète pour l&apos;hématologie clinique. Accédez rapidement aux informations essentielles pour votre pratique médicale.
+            </p>
+          </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-6xl mx-auto">
           {sections.map((section, index) => (
@@ -99,8 +100,9 @@ export default function Home() {
             Application développée pour la pratique clinique en hématologie
           </p>
         </section>
-      </div>
+        </div>
+      </main>
       <Footer />
-    </main>
+    </div>
   );
 }
