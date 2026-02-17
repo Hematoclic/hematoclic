@@ -1,7 +1,11 @@
 import Link from 'next/link'
 import Header from '../components/Header'
 import FileTree from '../components/FileTree'
-import { getSituationsGraves } from '@/lib/db'
+import { getSituationsGraves, getCategories } from '@/lib/db'
+
+// Désactiver le cache pour avoir les données à jour
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 const getUrgenceBadgeColor = (niveau: string) => {
   switch (niveau) {
@@ -17,7 +21,10 @@ const getUrgenceBadgeColor = (niveau: string) => {
 }
 
 export default async function SituationsGraves() {
-  const situationsGraves = await getSituationsGraves()
+  const [situationsGraves, categories] = await Promise.all([
+    getSituationsGraves(),
+    getCategories('situations')
+  ])
   
   // Grouper par catégorie et transformer pour le FileTree
   const situationsParCategorie = situationsGraves.reduce((acc, situation) => {
@@ -27,6 +34,13 @@ export default async function SituationsGraves() {
     acc[situation.categorie].push(situation)
     return acc
   }, {} as Record<string, typeof situationsGraves>)
+
+  // Ajouter les catégories vides de la DB
+  categories.forEach(cat => {
+    if (!situationsParCategorie[cat.nom]) {
+      situationsParCategorie[cat.nom] = []
+    }
+  })
 
   // Transformer en format FileTree
   const folders = Object.entries(situationsParCategorie).map(([categorie, situations]) => ({

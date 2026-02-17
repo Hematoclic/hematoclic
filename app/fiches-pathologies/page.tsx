@@ -1,10 +1,17 @@
 import Link from 'next/link'
 import Header from '../components/Header'
 import FileTree from '../components/FileTree'
-import { getFichesPathologiques } from '@/lib/db'
+import { getFichesPathologiques, getCategories } from '@/lib/db'
+
+// Désactiver le cache pour avoir les données à jour
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function FichesPathologies() {
-  const fichesPathologiques = await getFichesPathologiques()
+  const [fichesPathologiques, categories] = await Promise.all([
+    getFichesPathologiques(),
+    getCategories('fiches')
+  ])
   
   // Grouper par catégorie et transformer pour le FileTree
   const fichesParCategorie = fichesPathologiques.reduce((acc, fiche) => {
@@ -14,6 +21,13 @@ export default async function FichesPathologies() {
     acc[fiche.categorie].push(fiche)
     return acc
   }, {} as Record<string, typeof fichesPathologiques>)
+
+  // Ajouter les catégories vides de la DB
+  categories.forEach(cat => {
+    if (!fichesParCategorie[cat.nom]) {
+      fichesParCategorie[cat.nom] = []
+    }
+  })
 
   // Transformer en format FileTree
   const folders = Object.entries(fichesParCategorie).map(([categorie, fiches]) => ({
