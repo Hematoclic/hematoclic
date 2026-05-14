@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { countFiles, countAllFiles, countAllFolders } from '@/lib/tree-utils'
 
 interface FileItem {
   id: string
@@ -23,31 +24,6 @@ interface FileTreeProps {
   folders: FolderData[]
   fileIcon?: React.ReactNode
   accentColor?: string
-}
-
-// Compter récursivement les fichiers dans un dossier
-const countFiles = (folder: FolderData): number => {
-  let count = folder.files?.length || 0
-  if (folder.subfolders) {
-    count += folder.subfolders.reduce((acc, sub) => acc + countFiles(sub), 0)
-  }
-  return count
-}
-
-// Compter le total de fichiers dans tous les dossiers
-const countAllFiles = (folders: FolderData[]): number => {
-  return folders.reduce((acc, folder) => acc + countFiles(folder), 0)
-}
-
-// Compter récursivement tous les dossiers
-const countAllFolders = (folders: FolderData[]): number => {
-  return folders.reduce((acc, folder) => {
-    let count = 1
-    if (folder.subfolders) {
-      count += countAllFolders(folder.subfolders)
-    }
-    return acc + count
-  }, 0)
 }
 
 export default function FileTree({ folders, fileIcon, accentColor = '#a50000' }: FileTreeProps) {

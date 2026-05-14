@@ -2,12 +2,18 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createFichePathologique } from '@/lib/db'
+import { createFichePathologique, getCategories, Category } from '@/lib/db'
+import { flattenCategoriesWithPath } from '@/lib/folder-tree'
 
 export default function NewFichePathologie() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const categorieFromUrl = searchParams.get('categorie') || ''
+  const [dbCategories, setDbCategories] = useState<Category[]>([])
+
+  useEffect(() => {
+    getCategories('fiches').then(setDbCategories)
+  }, [])
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -49,15 +55,13 @@ export default function NewFichePathologie() {
     }
   }, [categorieFromUrl])
 
-  const categories = [
-    'Hémopathies malignes',
-    'Anémies',
-    'Troubles de la coagulation',
-    'Pathologies plaquettaires',
-    'Syndromes myéloprolifératifs',
-    'Syndromes lymphoprolifératifs',
-    'Autres',
-  ]
+  const categoryOptions = flattenCategoriesWithPath(dbCategories)
+  // Pre-select même si la catégorie URL est un nom qui n'existe pas encore dans la liste
+  // chargée (par ex. si le chargement n'est pas fini) → on l'ajoute en option transitoire.
+  const hasUrlCategoryInOptions = categoryOptions.some((c) => c.name === categorieFromUrl)
+  if (categorieFromUrl && !hasUrlCategoryInOptions) {
+    categoryOptions.unshift({ id: `__url__${categorieFromUrl}`, name: categorieFromUrl, pathLabel: categorieFromUrl })
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -172,8 +176,8 @@ export default function NewFichePathologie() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors"
               >
                 <option value="">Sélectionner une catégorie</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                {categoryOptions.map((cat) => (
+                  <option key={cat.id} value={cat.name}>{cat.pathLabel}</option>
                 ))}
               </select>
             </div>

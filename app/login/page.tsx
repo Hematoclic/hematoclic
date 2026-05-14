@@ -1,16 +1,28 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
+  )
+}
+
+function LoginPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const initialError = searchParams.get('error') === 'unauthorized'
+    ? 'Accès refusé : compte non administrateur.'
+    : null
+  const [error, setError] = useState<string | null>(initialError)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,7 +33,8 @@ export default function LoginPage() {
     const result = await signIn(email, password)
 
     if (result.success) {
-      router.push('/admin')
+      const redirectTo = searchParams.get('redirectTo')
+      router.push(redirectTo && redirectTo.startsWith('/admin') ? redirectTo : '/admin')
     } else {
       setError(result.error || 'Erreur de connexion')
     }

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { countFiles, countAllFiles, countAllFolders } from '@/lib/tree-utils'
 
 interface FileItem {
   id: string
@@ -16,9 +17,11 @@ interface FileItem {
 }
 
 interface FolderData {
+  id?: string
   name: string
   files?: FileItem[]
   subfolders?: FolderData[]
+  onDeleteFolder?: () => void
 }
 
 interface AdminFileTreeProps {
@@ -30,31 +33,6 @@ interface AdminFileTreeProps {
   createFileLabel?: string
   createFolderLabel?: string
   isDeleting?: string | null
-}
-
-// Compter récursivement les fichiers dans un dossier
-const countFiles = (folder: FolderData): number => {
-  let count = folder.files?.length || 0
-  if (folder.subfolders) {
-    count += folder.subfolders.reduce((acc, sub) => acc + countFiles(sub), 0)
-  }
-  return count
-}
-
-// Compter le total de fichiers dans tous les dossiers
-const countAllFiles = (folders: FolderData[]): number => {
-  return folders.reduce((acc, folder) => acc + countFiles(folder), 0)
-}
-
-// Compter récursivement tous les dossiers
-const countAllFolders = (folders: FolderData[]): number => {
-  return folders.reduce((acc, folder) => {
-    let count = 1
-    if (folder.subfolders) {
-      count += countAllFolders(folder.subfolders)
-    }
-    return acc + count
-  }, 0)
 }
 
 export default function AdminFileTree({ 
@@ -206,49 +184,69 @@ export default function AdminFileTree({
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {/* Dossiers */}
           {currentFolders.map((folder) => (
-            <button
-              key={folder.name}
-              onClick={() => navigateTo(folder.name)}
-              className="group flex flex-col items-center p-4 rounded-xl hover:bg-gray-50 transition-all duration-200"
+            <div
+              key={folder.id ?? folder.name}
+              className="group relative flex flex-col items-center p-4 rounded-xl hover:bg-gray-50 transition-all duration-200"
             >
-              <div className="relative mb-3">
-                <svg 
-                  className="w-16 h-16 transition-transform duration-200 group-hover:scale-110" 
-                  viewBox="0 0 24 24"
-                  fill="none"
+              {folder.onDeleteFolder && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    folder.onDeleteFolder?.()
+                  }}
+                  className="absolute top-2 right-2 z-10 p-1.5 bg-white shadow-md border border-gray-200 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  title="Supprimer le dossier"
                 >
-                  <ellipse cx="12" cy="20" rx="8" ry="1.5" fill="#e5e7eb" />
-                  <path 
-                    d="M2 6a2 2 0 012-2h5l2 2h9a2 2 0 012 2v2H2V6z" 
-                    fill={accentColor}
-                    opacity="0.7"
-                  />
-                  <path 
-                    d="M2 8h20v9a2 2 0 01-2 2H4a2 2 0 01-2-2V8z" 
-                    fill={accentColor}
-                  />
-                  <path 
-                    d="M2 8h20v2H2V8z" 
-                    fill="white"
-                    opacity="0.2"
-                  />
-                </svg>
-                <span 
-                  className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center text-xs font-bold text-white rounded-full"
-                  style={{ backgroundColor: accentColor }}
-                >
-                  {countFiles(folder)}
-                </span>
-              </div>
-              <span className="text-sm font-medium text-gray-700 text-center line-clamp-2 group-hover:text-gray-900">
-                {folder.name}
-              </span>
-              {folder.subfolders && folder.subfolders.length > 0 && (
-                <span className="text-xs text-gray-400 mt-1">
-                  {folder.subfolders.length} sous-dossier(s)
-                </span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               )}
-            </button>
+              <button
+                type="button"
+                onClick={() => navigateTo(folder.name)}
+                className="flex flex-col items-center w-full"
+              >
+                <div className="relative mb-3">
+                  <svg
+                    className="w-16 h-16 transition-transform duration-200 group-hover:scale-110"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <ellipse cx="12" cy="20" rx="8" ry="1.5" fill="#e5e7eb" />
+                    <path
+                      d="M2 6a2 2 0 012-2h5l2 2h9a2 2 0 012 2v2H2V6z"
+                      fill={accentColor}
+                      opacity="0.7"
+                    />
+                    <path
+                      d="M2 8h20v9a2 2 0 01-2 2H4a2 2 0 01-2-2V8z"
+                      fill={accentColor}
+                    />
+                    <path
+                      d="M2 8h20v2H2V8z"
+                      fill="white"
+                      opacity="0.2"
+                    />
+                  </svg>
+                  <span
+                    className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center text-xs font-bold text-white rounded-full"
+                    style={{ backgroundColor: accentColor }}
+                  >
+                    {countFiles(folder)}
+                  </span>
+                </div>
+                <span className="text-sm font-medium text-gray-700 text-center line-clamp-2 group-hover:text-gray-900">
+                  {folder.name}
+                </span>
+                {folder.subfolders && folder.subfolders.length > 0 && (
+                  <span className="text-xs text-gray-400 mt-1">
+                    {folder.subfolders.length} sous-dossier(s)
+                  </span>
+                )}
+              </button>
+            </div>
           ))}
 
           {/* Fichiers */}
@@ -258,7 +256,7 @@ export default function AdminFileTree({
               className="group relative flex flex-col items-center p-4 rounded-xl hover:bg-gray-50 transition-all duration-200"
             >
               {/* Menu actions */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-2 right-2 z-10">
                 <div className="flex items-center gap-1 bg-white rounded-lg shadow-md border border-gray-200 p-1">
                   {file.editHref && (
                     <Link

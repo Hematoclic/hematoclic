@@ -1,7 +1,14 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Header from '../components/Header'
 import FileTree from '../components/FileTree'
 import { getFichesPathologiques, getCategories } from '@/lib/db'
+import { buildFolderTree } from '@/lib/folder-tree'
+
+export const metadata: Metadata = {
+  title: 'Fiches Pathologies | Hématoclic',
+  description: 'Fiches détaillées des pathologies hématologiques : clinique, biologie, diagnostic, conduite à tenir et traitement.',
+}
 
 // Désactiver le cache pour avoir les données à jour
 export const dynamic = 'force-dynamic'
@@ -10,35 +17,19 @@ export const revalidate = 0
 export default async function FichesPathologies() {
   const [fichesPathologiques, categories] = await Promise.all([
     getFichesPathologiques(),
-    getCategories('fiches')
+    getCategories('fiches'),
   ])
-  
-  // Grouper par catégorie et transformer pour le FileTree
-  const fichesParCategorie = fichesPathologiques.reduce((acc, fiche) => {
-    if (!acc[fiche.categorie]) {
-      acc[fiche.categorie] = []
-    }
-    acc[fiche.categorie].push(fiche)
-    return acc
-  }, {} as Record<string, typeof fichesPathologiques>)
 
-  // Ajouter les catégories vides de la DB
-  categories.forEach(cat => {
-    if (!fichesParCategorie[cat.nom]) {
-      fichesParCategorie[cat.nom] = []
-    }
-  })
-
-  // Transformer en format FileTree
-  const folders = Object.entries(fichesParCategorie).map(([categorie, fiches]) => ({
-    name: categorie,
-    files: fiches.map(fiche => ({
+  const folders = buildFolderTree({
+    categories,
+    items: fichesPathologiques,
+    toFileItem: (fiche) => ({
       id: fiche.id,
       name: fiche.informationsGenerales.nom,
       description: fiche.informationsGenerales.definition,
       href: `/fiches-pathologies/${fiche.id}`,
-    }))
-  }))
+    }),
+  })
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">

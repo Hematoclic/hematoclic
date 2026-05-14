@@ -154,11 +154,25 @@ function dbToSituationGrave(db: DbSituationGrave): SituationGrave {
 // FICHES PATHOLOGIQUES
 // =============================================
 
-export async function getFichesPathologiques(): Promise<FichePathologique[]> {
+const DEFAULT_PAGE_SIZE = 200
+const MAX_PAGE_SIZE = 500
+
+function clampLimit(limit: number): number {
+  if (!Number.isFinite(limit) || limit <= 0) return DEFAULT_PAGE_SIZE
+  return Math.min(Math.floor(limit), MAX_PAGE_SIZE)
+}
+
+export async function getFichesPathologiques(
+  limit: number = DEFAULT_PAGE_SIZE,
+  offset = 0,
+): Promise<FichePathologique[]> {
+  const safeLimit = clampLimit(limit)
+  const safeOffset = Math.max(0, Math.floor(offset))
   const { data, error } = await supabase
     .from('fiches_pathologiques')
     .select('*')
     .order('created_at', { ascending: false })
+    .range(safeOffset, safeOffset + safeLimit - 1)
 
   if (error) {
     console.error('Erreur lors de la récupération des fiches:', error)
@@ -276,11 +290,17 @@ export async function deleteFichePathologique(id: string): Promise<{ success: bo
 // SITUATIONS GRAVES
 // =============================================
 
-export async function getSituationsGraves(): Promise<SituationGrave[]> {
+export async function getSituationsGraves(
+  limit: number = DEFAULT_PAGE_SIZE,
+  offset = 0,
+): Promise<SituationGrave[]> {
+  const safeLimit = clampLimit(limit)
+  const safeOffset = Math.max(0, Math.floor(offset))
   const { data, error } = await supabase
     .from('situations_graves')
     .select('*')
     .order('nom')
+    .range(safeOffset, safeOffset + safeLimit - 1)
 
   if (error) {
     console.error('Erreur lors de la récupération des situations:', error)
@@ -422,6 +442,45 @@ function dbToCategory(db: DbCategory): Category {
   }
 }
 
+/**
+ * Walk a list of categories following the names in `path`.
+ * Path is interpreted as ordered names from root to leaf.
+ * Returns null if any segment cannot be matched.
+ */
+export function findCategoryByPath(
+  categories: Category[],
+  path: string[],
+): Category | null {
+  let currentId: string | null = null
+  let currentCategory: Category | null = null
+  for (const name of path) {
+    const found = categories.find(
+      (c: Category) => c.nom === name && c.parentId === currentId,
+    )
+    if (!found) return null
+    currentCategory = found
+    currentId = found.id
+  }
+  return currentCategory
+}
+
+/**
+ * Build the full path (root → leaf) for a given category id.
+ * Returns an empty array if the id is not found.
+ */
+export function buildCategoryPath(categories: Category[], id: string): string[] {
+  const byId = new Map(categories.map((c) => [c.id, c]))
+  const target = byId.get(id)
+  if (!target) return []
+  const path: string[] = []
+  let current: Category | undefined = target
+  while (current) {
+    path.unshift(current.nom)
+    current = current.parentId ? byId.get(current.parentId) : undefined
+  }
+  return path
+}
+
 export async function getCategories(type: 'fiches' | 'situations'): Promise<Category[]> {
   const { data, error } = await supabase
     .from('categories')
@@ -524,11 +583,17 @@ function dbToTicket(db: DbTicket): Ticket {
   }
 }
 
-export async function getTickets(): Promise<Ticket[]> {
+export async function getTickets(
+  limit: number = DEFAULT_PAGE_SIZE,
+  offset = 0,
+): Promise<Ticket[]> {
+  const safeLimit = clampLimit(limit)
+  const safeOffset = Math.max(0, Math.floor(offset))
   const { data, error } = await supabase
     .from('tickets')
     .select('*')
     .order('created_at', { ascending: false })
+    .range(safeOffset, safeOffset + safeLimit - 1)
 
   if (error) {
     console.error('Erreur lors de la récupération des tickets:', error)

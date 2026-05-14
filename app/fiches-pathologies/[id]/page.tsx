@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Header from '../../components/Header'
 import { getFichePathologiqueById } from '@/lib/db'
@@ -7,6 +8,20 @@ interface PageProps {
   params: Promise<{
     id: string
   }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params
+  const fiche = await getFichePathologiqueById(id)
+  if (!fiche) {
+    return { title: 'Fiche introuvable | Hématoclic' }
+  }
+  const nom = fiche.informationsGenerales.nom
+  const definition = fiche.informationsGenerales.definition
+  return {
+    title: `${nom} | Hématoclic`,
+    description: definition?.slice(0, 160) || `Fiche pathologique : ${nom}`,
+  }
 }
 
 export default async function FichePathologiqueDetail({ params }: PageProps) {

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Header from '../../components/Header'
 import { getSituationGraveById } from '@/lib/db'
@@ -7,6 +8,18 @@ interface PageProps {
   params: Promise<{
     id: string
   }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params
+  const situation = await getSituationGraveById(id)
+  if (!situation) {
+    return { title: 'Situation introuvable | Hématoclic' }
+  }
+  return {
+    title: `${situation.nom} | Hématoclic`,
+    description: situation.description?.slice(0, 160) || `Situation grave : ${situation.nom}`,
+  }
 }
 
 const getUrgenceColor = (niveau: string) => {

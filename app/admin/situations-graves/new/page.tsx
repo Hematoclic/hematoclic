@@ -2,13 +2,20 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createSituationGrave } from '@/lib/db'
+import { createSituationGrave, getCategories, Category } from '@/lib/db'
+import { flattenCategoriesWithPath } from '@/lib/folder-tree'
 
 export default function NewSituationGrave() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const categorieFromUrl = searchParams.get('categorie') || ''
+  const [dbCategories, setDbCategories] = useState<Category[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    getCategories('situations').then(setDbCategories)
+  }, [])
 
   const [formData, setFormData] = useState({
     nom: '',
@@ -35,20 +42,16 @@ export default function NewSituationGrave() {
 
   // Pré-remplir la catégorie depuis l'URL
   useEffect(() => {
-    const categorieFromUrl = searchParams.get('categorie')
     if (categorieFromUrl) {
-      setFormData(prev => ({ ...prev, categorie: categorieFromUrl }))
+      setFormData((prev) => ({ ...prev, categorie: categorieFromUrl }))
     }
-  }, [searchParams])
+  }, [categorieFromUrl])
 
-  const categories = [
-    'Urgences métaboliques',
-    'Urgences hémorragiques',
-    'Urgences infectieuses',
-    'Urgences thrombotiques',
-    'Urgences transfusionnelles',
-    'Autres urgences',
-  ]
+  const categoryOptions = flattenCategoriesWithPath(dbCategories)
+  const hasUrlCategoryInOptions = categoryOptions.some((c) => c.name === categorieFromUrl)
+  if (categorieFromUrl && !hasUrlCategoryInOptions) {
+    categoryOptions.unshift({ id: `__url__${categorieFromUrl}`, name: categorieFromUrl, pathLabel: categorieFromUrl })
+  }
 
   const niveauxUrgence = [
     { value: 'critique', label: 'Critique', description: 'Mise en jeu du pronostic vital immédiat' },
@@ -160,8 +163,8 @@ export default function NewSituationGrave() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors"
               >
                 <option value="">Sélectionner une catégorie</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                {categoryOptions.map((cat) => (
+                  <option key={cat.id} value={cat.name}>{cat.pathLabel}</option>
                 ))}
               </select>
             </div>

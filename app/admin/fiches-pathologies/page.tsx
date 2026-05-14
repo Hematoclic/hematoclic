@@ -2,8 +2,18 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { FichePathologique } from '@/lib/types/fiche-pathologique'
-import { getFichesPathologiques, deleteFichePathologique, getCategories, createCategory, deleteCategory, Category } from '@/lib/db'
+import {
+  getFichesPathologiques,
+  deleteFichePathologique,
+  getCategories,
+  createCategory,
+  deleteCategory,
+  findCategoryByPath,
+  Category,
+} from '@/lib/db'
+import { buildFolderTree } from '@/lib/folder-tree'
 import AdminFileTree from '@/app/components/AdminFileTree'
+import NewFolderModal from '@/app/components/NewFolderModal'
 
 export default function AdminFichesPathologies() {
   const router = useRouter()
@@ -13,8 +23,6 @@ export default function AdminFichesPathologies() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [showNewFolderModal, setShowNewFolderModal] = useState(false)
   const [newFolderPath, setNewFolderPath] = useState<string[]>([])
-  const [newFolderName, setNewFolderName] = useState('')
-  const [creatingFolder, setCreatingFolder] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -24,50 +32,20 @@ export default function AdminFichesPathologies() {
     setLoading(true)
     const [fichesData, categoriesData] = await Promise.all([
       getFichesPathologiques(),
-      getCategories('fiches')
+      getCategories('fiches'),
     ])
     setFiches(fichesData)
     setCategories(categoriesData)
     setLoading(false)
   }
 
-  // Transformer les fiches en structure de dossiers
-  const buildFolderStructure = () => {
-    // Récupérer toutes les catégories uniques (depuis les fiches ET la table categories)
-    const fichesCategories = [...new Set(fiches.map(f => f.categorie))]
-    const dbCategories = categories.map(c => c.nom)
-    const allCategories = [...new Set([...fichesCategories, ...dbCategories])]
-    
-    return allCategories.map(categorie => {
-      const categoryFromDb = categories.find(c => c.nom === categorie)
-      return {
-        id: categoryFromDb?.id,
-        name: categorie,
-        files: fiches
-          .filter(f => f.categorie === categorie)
-          .map(fiche => ({
-            id: fiche.id,
-            name: fiche.informationsGenerales.nom,
-            description: fiche.informationsGenerales.definition,
-            href: `/fiches-pathologies/${fiche.id}`,
-            editHref: `/admin/fiches-pathologies/${fiche.id}/edit`,
-            onDelete: () => handleDelete(fiche.id, fiche.informationsGenerales.nom)
-          })),
-        onDeleteFolder: categoryFromDb ? () => handleDeleteFolder(categoryFromDb.id, categorie) : undefined
-      }
-    })
-  }
-
   const handleDelete = async (id: string, nom: string) => {
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer "${nom}" ?`)) {
-      return
-    }
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer "${nom}" ?`)) return
 
     setDeleting(id)
     const result = await deleteFichePathologique(id)
-    
     if (result.success) {
-      setFiches(fiches.filter(f => f.id !== id))
+      setFiches(fiches.filter((f) => f.id !== id))
     } else {
       alert(`Erreur: ${result.error}`)
     }
@@ -75,51 +53,69 @@ export default function AdminFichesPathologies() {
   }
 
   const handleDeleteFolder = async (id: string, nom: string) => {
-    const fichesInCategory = fiches.filter(f => f.categorie === nom)
+    const fichesInCategory = fiches.filter((f) => f.categorie === nom)
     if (fichesInCategory.length > 0) {
-      alert(`Impossible de supprimer le dossier "${nom}" car il contient ${fichesInCategory.length} fiche(s). Supprimez d'abord les fiches.`)
+      alert(
+        `Impossible de supprimer le dossier "${nom}" car il contient ${fichesInCategory.length} fiche(s). Supprimez d'abord les fiches.`,
+      )
       return
     }
-    
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer le dossier "${nom}" ?`)) {
+    const hasChildren = categories.some((c) => c.parentId === id)
+    if (hasChildren) {
+      alert(`Impossible de supprimer le dossier "${nom}" car il contient des sous-dossiers.`)
       return
     }
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le dossier "${nom}" ?`)) return
 
     const result = await deleteCategory(id)
     if (result.success) {
-      setCategories(categories.filter(c => c.id !== id))
+      setCategories(categories.filter((c) => c.id !== id))
     } else {
       alert(`Erreur: ${result.error}`)
     }
   }
 
+  const folders = buildFolderTree({
+    categories,
+    items: fiches,
+    toFileItem: (fiche) => ({
+      id: fiche.id,
+      name: fiche.informationsGenerales.nom,
+      description: fiche.informationsGenerales.definition,
+      href: `/fiches-pathologies/${fiche.id}`,
+      editHref: `/admin/fiches-pathologies/${fiche.id}/edit`,
+      onDelete: () => handleDelete(fiche.id, fiche.informationsGenerales.nom),
+    }),
+    onDeleteFolder: handleDeleteFolder,
+  })
+
   const handleCreateFolder = (path: string[]) => {
     setNewFolderPath(path)
-    setNewFolderName('')
     setShowNewFolderModal(true)
   }
 
   const handleCreateFile = (path: string[]) => {
-    const categorie = path[0] || ''
+    const categorie = path[path.length - 1] || ''
     router.push(`/admin/fiches-pathologies/new?categorie=${encodeURIComponent(categorie)}`)
   }
 
-  const handleSubmitNewFolder = async () => {
-    if (!newFolderName.trim()) {
-      alert('Veuillez entrer un nom de dossier')
-      return
+  const handleSubmitNewFolder = async (name: string) => {
+    let parentId: string | null = null
+    if (newFolderPath.length > 0) {
+      const parent = findCategoryByPath(categories, newFolderPath)
+      if (!parent) {
+        alert('Dossier parent introuvable. Rafraîchissez la page.')
+        return
+      }
+      parentId = parent.id
     }
-
-    setCreatingFolder(true)
-    const result = await createCategory(newFolderName.trim(), 'fiches')
-    
+    const result = await createCategory(name, 'fiches', parentId)
     if (result.success && result.category) {
       setCategories([...categories, result.category])
       setShowNewFolderModal(false)
     } else {
       alert(`Erreur: ${result.error}`)
     }
-    setCreatingFolder(false)
   }
 
   if (loading) {
@@ -138,7 +134,6 @@ export default function AdminFichesPathologies() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Fiches Pathologies</h1>
@@ -155,9 +150,8 @@ export default function AdminFichesPathologies() {
         </button>
       </div>
 
-      {/* File Tree */}
       <AdminFileTree
-        folders={buildFolderStructure()}
+        folders={folders}
         accentColor="#a50000"
         onCreateFolder={handleCreateFolder}
         onCreateFile={handleCreateFile}
@@ -166,51 +160,13 @@ export default function AdminFichesPathologies() {
         isDeleting={deleting}
       />
 
-      {/* Modal nouveau dossier */}
-      {showNewFolderModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Nouvelle catégorie</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              {newFolderPath.length > 0 
-                ? `Créer dans: ${newFolderPath.join(' / ')}`
-                : 'Créer à la racine'
-              }
-            </p>
-            <input
-              type="text"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="Nom de la catégorie..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors mb-4"
-              autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmitNewFolder()}
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowNewFolderModal(false)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                disabled={creatingFolder}
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleSubmitNewFolder}
-                disabled={creatingFolder}
-                className="px-4 py-2 bg-[#a50000] text-white rounded-lg hover:bg-[#8a0000] transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {creatingFolder && (
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                )}
-                Créer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <NewFolderModal
+        open={showNewFolderModal}
+        path={newFolderPath}
+        accentColor="#a50000"
+        onCancel={() => setShowNewFolderModal(false)}
+        onSubmit={handleSubmitNewFolder}
+      />
     </div>
   )
 }

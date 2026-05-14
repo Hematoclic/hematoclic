@@ -1,5 +1,11 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Header from '../components/Header'
+
+export const metadata: Metadata = {
+  title: 'Orientation Diagnostique | Hématoclic',
+  description: 'Aide à l\'orientation diagnostique en hématologie : démarche, examens et hypothèses.',
+}
 
 export default function OrientationDiagnostique() {
   return (

@@ -1,5 +1,11 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Header from '../components/Header'
+
+export const metadata: Metadata = {
+  title: 'Situations Fréquentes | Hématoclic',
+  description: 'Situations cliniques fréquentes en hématologie : démarche et prise en charge courante.',
+}
 
 export default function SituationsFrequentes() {
   return (

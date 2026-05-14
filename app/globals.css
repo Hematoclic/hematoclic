@@ -8,6 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-hematoclic: #a50000;
+  --color-hematoclic-dark: #8a0000;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

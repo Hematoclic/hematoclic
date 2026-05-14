@@ -1,7 +1,14 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Header from '../components/Header'
 import FileTree from '../components/FileTree'
 import { getSituationsGraves, getCategories } from '@/lib/db'
+import { buildFolderTree } from '@/lib/folder-tree'
+
+export const metadata: Metadata = {
+  title: 'Situations Graves | Hématoclic',
+  description: 'Urgences hématologiques : protocoles, conduites à tenir et prise en charge immédiate des situations critiques.',
+}
 
 // Désactiver le cache pour avoir les données à jour
 export const dynamic = 'force-dynamic'
@@ -23,29 +30,13 @@ const getUrgenceBadgeColor = (niveau: string) => {
 export default async function SituationsGraves() {
   const [situationsGraves, categories] = await Promise.all([
     getSituationsGraves(),
-    getCategories('situations')
+    getCategories('situations'),
   ])
-  
-  // Grouper par catégorie et transformer pour le FileTree
-  const situationsParCategorie = situationsGraves.reduce((acc, situation) => {
-    if (!acc[situation.categorie]) {
-      acc[situation.categorie] = []
-    }
-    acc[situation.categorie].push(situation)
-    return acc
-  }, {} as Record<string, typeof situationsGraves>)
 
-  // Ajouter les catégories vides de la DB
-  categories.forEach(cat => {
-    if (!situationsParCategorie[cat.nom]) {
-      situationsParCategorie[cat.nom] = []
-    }
-  })
-
-  // Transformer en format FileTree
-  const folders = Object.entries(situationsParCategorie).map(([categorie, situations]) => ({
-    name: categorie,
-    files: situations.map(situation => ({
+  const folders = buildFolderTree({
+    categories,
+    items: situationsGraves,
+    toFileItem: (situation) => ({
       id: situation.id,
       name: situation.nom,
       description: situation.description,
@@ -54,8 +45,8 @@ export default async function SituationsGraves() {
         color: getUrgenceBadgeColor(situation.niveauUrgence),
       },
       href: `/situations-graves/${situation.id}`,
-    }))
-  }))
+    }),
+  })
 
   // Icône d'alerte pour les situations graves
   const alertIcon = (

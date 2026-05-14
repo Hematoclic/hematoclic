@@ -5,33 +5,41 @@
 Créez un fichier `.env.local` à la racine du projet avec les variables suivantes :
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://iyllteozniqgxoedkqha.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle_anon_ici
+NEXT_PUBLIC_SUPABASE_URL=https://<votre-projet>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<votre_anon_key>
+# UNIQUEMENT côté serveur (jamais préfixée NEXT_PUBLIC_)
+SUPABASE_SERVICE_ROLE_KEY=<votre_service_role_key>
 ```
 
-## Obtenir votre clé API
+> ⚠️ Ne committez jamais `.env.local`. La clé `service_role` bypass toutes les RLS — elle ne doit JAMAIS être exposée côté client.
 
-1. Allez sur votre dashboard Supabase : https://supabase.com/dashboard/project/iyllteozniqgxoedkqha
-2. Naviguez vers **Settings** > **API**
-3. Copiez la **anon/public** key
-4. Collez-la dans votre fichier `.env.local`
+## Obtenir vos clés
+
+1. Allez sur votre dashboard Supabase et sélectionnez le projet.
+2. Naviguez vers **Settings** > **API**.
+3. Copiez la **anon/public** key dans `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+4. Copiez la **service_role** key dans `SUPABASE_SERVICE_ROLE_KEY` (jamais préfixée `NEXT_PUBLIC_`).
 
 ## Utilisation
 
-Le client Supabase est disponible via `lib/supabase.ts` :
+Client navigateur (RLS appliquée) :
 
 ```typescript
 import { supabase } from '@/lib/supabase'
 
-// Exemple : lire des données
-const { data, error } = await supabase
-  .from('table_name')
-  .select('*')
+const { data, error } = await supabase.from('table_name').select('*')
+```
+
+Client serveur (bypass RLS, à utiliser dans les routes API uniquement) :
+
+```typescript
+import { getSupabaseAdmin } from '@/lib/supabase-server'
+
+const admin = getSupabaseAdmin()
+const { data, error } = await admin.from('table_name').insert(...)
 ```
 
 ## Test de connexion
-
-Pour tester la connexion, utilisez la fonction `testSupabaseConnection()` :
 
 ```typescript
 import { testSupabaseConnection } from '@/lib/supabase'
@@ -39,4 +47,3 @@ import { testSupabaseConnection } from '@/lib/supabase'
 const result = await testSupabaseConnection()
 console.log(result)
 ```
-

@@ -59,8 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    setUser(null)
-    setSession(null)
+    // onAuthStateChange écoute déjà la déconnexion et remet user/session à null.
   }
 
   return (
