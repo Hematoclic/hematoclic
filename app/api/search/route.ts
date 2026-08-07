@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [fichesRes, situationsRes] = await Promise.all([
+    const [fichesRes, situationsRes, frequentesRes, orientationsRes] = await Promise.all([
       supabase
         .from('fiches_pathologiques')
         .select('id, categorie, informations_generales')
@@ -25,10 +25,20 @@ export async function GET(request: NextRequest) {
         .from('situations_graves')
         .select('id, nom, categorie, description, niveau_urgence')
         .limit(FETCH_LIMIT),
+      supabase
+        .from('situations_frequentes')
+        .select('id, nom, categorie, description')
+        .limit(FETCH_LIMIT),
+      supabase
+        .from('orientations_diagnostiques')
+        .select('id, nom, categorie, description')
+        .limit(FETCH_LIMIT),
     ])
 
     if (fichesRes.error) throw fichesRes.error
     if (situationsRes.error) throw situationsRes.error
+    if (frequentesRes.error) throw frequentesRes.error
+    if (orientationsRes.error) throw orientationsRes.error
 
     const fichesResults = (fichesRes.data || [])
       .filter((fiche) => {
@@ -64,7 +74,42 @@ export async function GET(request: NextRequest) {
         },
       }))
 
-    const allResults = [...fichesResults, ...situationsResults].sort((a, b) => {
+    const frequentesResults = (frequentesRes.data || [])
+      .filter((item) => {
+        const nom = item.nom?.toLowerCase() || ''
+        const description = item.description?.toLowerCase() || ''
+        const categorie = item.categorie?.toLowerCase() || ''
+        return nom.includes(query) || description.includes(query) || categorie.includes(query)
+      })
+      .map((item) => ({
+        id: item.id,
+        type: 'frequente' as const,
+        nom: item.nom,
+        categorie: item.categorie,
+        description: item.description || '',
+      }))
+
+    const orientationsResults = (orientationsRes.data || [])
+      .filter((item) => {
+        const nom = item.nom?.toLowerCase() || ''
+        const description = item.description?.toLowerCase() || ''
+        const categorie = item.categorie?.toLowerCase() || ''
+        return nom.includes(query) || description.includes(query) || categorie.includes(query)
+      })
+      .map((item) => ({
+        id: item.id,
+        type: 'orientation' as const,
+        nom: item.nom,
+        categorie: item.categorie,
+        description: item.description || '',
+      }))
+
+    const allResults = [
+      ...fichesResults,
+      ...situationsResults,
+      ...frequentesResults,
+      ...orientationsResults,
+    ].sort((a, b) => {
       const aNameMatch = a.nom.toLowerCase().startsWith(query) ? 0 : 1
       const bNameMatch = b.nom.toLowerCase().startsWith(query) ? 0 : 1
       return aNameMatch - bNameMatch

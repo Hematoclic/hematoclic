@@ -1,8 +1,13 @@
 import Link from "next/link";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import HomeIntro from "./components/HomeIntro";
 
-export default function Home() {
+// L'encart d'accueil est éditable en admin — pas de cache statique.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function Home() {
   const sections = [
     {
       title: "Fiches Pathologies",
@@ -59,6 +64,9 @@ export default function Home() {
               Votre ressource complète pour l&apos;hématologie clinique. Accédez rapidement aux informations essentielles pour votre pratique médicale.
             </p>
           </section>
+
+        {/* Encart éditorial (masqué si vide) */}
+        <HomeIntro />
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-6xl mx-auto">
           {sections.map((section, index) => (

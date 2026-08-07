@@ -55,12 +55,21 @@ export default function Footer() {
             </div>
 
             {/* Liens */}
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
               <Link href="/fiches-pathologies" className="text-gray-400 hover:text-white transition-colors text-sm">
                 Fiches Pathologies
               </Link>
+              <Link href="/orientation-diagnostique" className="text-gray-400 hover:text-white transition-colors text-sm">
+                Orientation Diagnostique
+              </Link>
               <Link href="/situations-graves" className="text-gray-400 hover:text-white transition-colors text-sm">
                 Situations Graves
+              </Link>
+              <Link href="/situations-frequentes" className="text-gray-400 hover:text-white transition-colors text-sm">
+                Situations Fréquentes
+              </Link>
+              <Link href="/mentions-legales" className="text-gray-400 hover:text-white transition-colors text-sm">
+                Mentions légales
               </Link>
             </div>
 
@@ -166,6 +175,18 @@ export default function Footer() {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a50000]/20 focus:border-[#a50000] transition-colors resize-none"
                     />
                   </div>
+
+                  <p className="text-xs text-gray-500">
+                    En envoyant ce formulaire, vous acceptez que votre adresse e-mail
+                    soit utilisée pour traiter votre demande. Consultez nos{' '}
+                    <Link
+                      href="/mentions-legales"
+                      onClick={() => setShowTicketModal(false)}
+                      className="text-[#a50000] hover:underline"
+                    >
+                      mentions légales
+                    </Link>.
+                  </p>
 
                   <button
                     type="submit"

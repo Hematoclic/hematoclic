@@ -2,9 +2,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 
+type SearchResultType = 'fiche' | 'situation' | 'frequente' | 'orientation'
+
 interface SearchResult {
   id: string
-  type: 'fiche' | 'situation'
+  type: SearchResultType
   nom: string
   categorie: string
   description: string
@@ -12,6 +14,13 @@ interface SearchResult {
     text: string
     color: string
   }
+}
+
+const RESULT_HREF: Record<SearchResultType, string> = {
+  fiche: '/fiches-pathologies',
+  situation: '/situations-graves',
+  frequente: '/situations-frequentes',
+  orientation: '/orientation-diagnostique',
 }
 
 interface SearchModalProps {
@@ -147,21 +156,21 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 {results.map((result) => (
                   <Link
                     key={`${result.type}-${result.id}`}
-                    href={result.type === 'fiche' ? `/fiches-pathologies/${result.id}` : `/situations-graves/${result.id}`}
+                    href={`${RESULT_HREF[result.type]}/${result.id}`}
                     onClick={onClose}
                     className="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors"
                   >
                     {/* Icône */}
                     <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                      result.type === 'fiche' ? 'bg-[#a50000]/10' : 'bg-red-100'
+                      result.type === 'situation' ? 'bg-red-100' : 'bg-[#a50000]/10'
                     }`}>
-                      {result.type === 'fiche' ? (
-                        <svg className="w-5 h-5 text-[#a50000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      ) : (
+                      {result.type === 'situation' ? (
                         <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-[#a50000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       )}
                     </div>
